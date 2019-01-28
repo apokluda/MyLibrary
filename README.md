@@ -1,2 +1,2 @@
-# LibraryManager
+# MyLibrary
 An exercise to implement a simple RESTful server with database
