@@ -1,3 +1,5 @@
+import datetime
+
 from peewee import *
 
 import mylibrary
@@ -9,4 +11,4 @@ class UserModel(BaseModel):
 
     username = CharField(unique=True)
     password = CharField()
-    join_date = DateTimeField()
+    join_date = DateTimeField(default=datetime.datetime.now)

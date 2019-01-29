@@ -1,5 +1,3 @@
-import datetime
-
 import falcon
 from falcon.media.validators import jsonschema
 
@@ -34,7 +32,6 @@ class UserAPI(object):
         user = UserModel(
             username=doc.get('username'),
             password=doc.get('password'),
-            join_date=datetime.datetime.now()
         )
         try:
             user.save()
