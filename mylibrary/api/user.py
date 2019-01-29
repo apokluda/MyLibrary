@@ -1,3 +1,5 @@
+import datetime
+
 import falcon
 from falcon.media.validators import jsonschema
 
@@ -13,12 +15,13 @@ create_user_schema = {
             "type": "string",
             "minLength": 1,
         },
-        "real_name": {
-            "description": "Your full name",
-            "type": "string"
+        "password": {
+            "description": "Your chosen password",
+            "type": "string",
+            "minLength": 6,
         }
     },
-    "required": ["username"]
+    "required": ["username", "password"]
 }
 
 class UserAPI(object):
@@ -28,8 +31,17 @@ class UserAPI(object):
     @jsonschema.validate(create_user_schema)
     def on_post(self, req, resp):
         doc = req.media
-        user = UserModel(username=doc.get('username'),real_name=doc.get('real_name', ""))
-        user.save()
-
-        resp.status = falcon.HTTP_CREATED
-        resp.location = '/user/{}'.format(doc['username'])
+        user = UserModel(
+            username=doc.get('username'),
+            password=doc.get('password'),
+            join_date=datetime.datetime.now()
+        )
+        try:
+            user.save()
+            resp.status = falcon.HTTP_CREATED
+            resp.location = '/user/{}'.format(doc['username'])
+        except IntegrityError as e:
+            raise falcon.HTTPBadRequest(
+                "Username Unavailable",
+                "The requsted username is already in use. Please try again.\n\nDetails: {}".format(e)
+            )

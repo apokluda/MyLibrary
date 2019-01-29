@@ -1,11 +1,12 @@
 from peewee import *
 
 import mylibrary
+from .base import BaseModel
 
-class UserModel(Model):
-    username = CharField()
-    real_name = CharField()
-
+class UserModel(BaseModel):
     class Meta:
-        table_name = "User"
-        database = mylibrary.db
+        table_name = "user"
+
+    username = CharField(unique=True)
+    password = CharField()
+    join_date = DateTimeField()
