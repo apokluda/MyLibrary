@@ -12,6 +12,7 @@ create_user_schema = {
             "description": "Desired username",
             "type": "string",
             "minLength": 1,
+            "pattern": "^[^0-9]"
         },
         "password": {
             "description": "Your chosen password",
@@ -23,8 +24,34 @@ create_user_schema = {
 }
 
 class UserAPI(object):
+    # Disable authentication on the POST method to allow anyone to create a
+    # new user account. (Alternatively, we could require that the admin user
+    # create all new user accounts)
+    auth = {
+        "exempt_methods": ["POST"]
+    }
+
     def on_get(self, req, resp):
-        resp.media = {'users':'I\'m working on it'}
+        user = req.context['user']
+        if user['username'] != 'admin':
+            raise falcon.HTTPUnauthorized(
+                "Operation Not Permitted",
+                "Only admin can list all users"
+            )
+
+        body = {
+            "href": req.forwarded_uri,
+            "items": []
+        }
+
+        for user in UserModel.select():
+            print("appending user " + user.username)
+            body['items'].append({"username" : user.username,
+            "join_date": str(user.join_date),
+            "href": req.forwarded_uri + "/" + str(user.id)})
+
+        resp.media = body
+
 
     @jsonschema.validate(create_user_schema)
     def on_post(self, req, resp):
