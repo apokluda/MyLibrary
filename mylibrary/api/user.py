@@ -75,4 +75,8 @@ class Users(object):
             )
 
 class User(object):
-    pass
+    def on_get(self, req, resp, username_or_id):
+        try:
+            print("You requsted id " + str(int(username_or_id)))
+        except ValueError:
+            print("You requested username " + name_or_id)
