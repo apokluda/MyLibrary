@@ -5,6 +5,8 @@ from peewee import *
 
 from mylibrary.model import UserModel
 
+from mylibrary.routes import routes
+
 create_user_schema = {
     "type": "object",
     "properties": {
@@ -23,7 +25,7 @@ create_user_schema = {
     "required": ["username", "password"]
 }
 
-class UserAPI(object):
+class Users(object):
     # Disable authentication on the POST method to allow anyone to create a
     # new user account. (Alternatively, we could require that the admin user
     # create all new user accounts)
@@ -39,19 +41,21 @@ class UserAPI(object):
                 "Only admin can list all users"
             )
 
+        # It would make more sense to use forwarded_uri here, since this is
+        # the original URI sent by the client for proxied requests, however
+        # it does not included the original port. Perhaps this is a bug in
+        # falcon?
         body = {
-            "href": req.forwarded_uri,
+            "href": req.uri,
             "items": []
         }
 
         for user in UserModel.select():
-            print("appending user " + user.username)
             body['items'].append({"username" : user.username,
             "join_date": str(user.join_date),
-            "href": req.forwarded_uri + "/" + str(user.id)})
+            "href": req.prefix + routes['user'].format(username_or_id=str(user.id))})
 
         resp.media = body
-
 
     @jsonschema.validate(create_user_schema)
     def on_post(self, req, resp):
@@ -63,9 +67,12 @@ class UserAPI(object):
         try:
             user.save()
             resp.status = falcon.HTTP_CREATED
-            resp.location = '/user/{}'.format(doc['username'])
+            resp.location = routes['user'].format(username_or_id=doc['username'])
         except IntegrityError as e:
             raise falcon.HTTPBadRequest(
                 "Username Unavailable",
                 "The requsted username is already in use. Please try again.\n\nDetails: {}".format(e)
             )
+
+class User(object):
+    pass

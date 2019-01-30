@@ -2,6 +2,7 @@ import falcon
 from falcon_auth import FalconAuthMiddleware, BasicAuthBackend
 import mylibrary.api.user
 import mylibrary.model.auth
+from .routes import routes
 
 # Setup following falcon-auth usage example:
 user_loader = mylibrary.model.auth.authenticate
@@ -17,5 +18,5 @@ application = falcon.API(middleware=[auth_middleware])
 # request or accept header but this would introduce more complexity since we
 # would have to write custom routing code for falcon.
 
-user = mylibrary.api.user.UserAPI()
-application.add_route('/v1/users', user)
+application.add_route(routes['users'], mylibrary.api.user.Users())
+application.add_route(routes['user'], mylibrary.api.user.User())
