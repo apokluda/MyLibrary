@@ -14,7 +14,7 @@ create_user_schema = {
             "description": "Desired username",
             "type": "string",
             "minLength": 1,
-            "pattern": "^[^0-9]"
+            "pattern": "^[^\\d\\s]"
         },
         "password": {
             "description": "Your chosen password",
@@ -76,7 +76,10 @@ class Users(object):
 
 class User(object):
     def on_get(self, req, resp, username_or_id):
+        # We use input validation to ensure that usernames do not start with a
+        # digit nor whitespace. Thus, if we are given an integer, it must be
+        # a user ID, and a username otherwise.
         try:
             print("You requsted id " + str(int(username_or_id)))
         except ValueError:
-            print("You requested username " + name_or_id)
+            print("You requested username " + username_or_id)
