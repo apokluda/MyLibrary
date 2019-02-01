@@ -3,7 +3,7 @@ from falcon.media.validators import jsonschema
 
 from peewee import *
 
-from mylibrary.model import UserModel
+from mylibrary.model.user import UserModel, DoesNotExist
 
 from mylibrary.routes import routes
 
@@ -25,6 +25,19 @@ create_user_schema = {
     "required": ["username", "password"]
 }
 
+class AllowedUsers(object):
+    def __init__(self, users):
+        self._users = users
+
+    def __call__(self, req, resp, resource, params):
+        user = req.context['user']
+        if user['username'] not in self._users:
+            raise falcon.HTTPUnauthorized(
+                "Operation Not Permitted",
+                "You do not have the permissions necessary to perform the requested operation."
+            )
+
+
 class Users(object):
     # Disable authentication on the POST method to allow anyone to create a
     # new user account. (Alternatively, we could require that the admin user
@@ -33,14 +46,8 @@ class Users(object):
         "exempt_methods": ["POST"]
     }
 
+    @falcon.before(AllowedUsers(['admin']))
     def on_get(self, req, resp):
-        user = req.context['user']
-        if user['username'] != 'admin':
-            raise falcon.HTTPUnauthorized(
-                "Operation Not Permitted",
-                "Only admin can list all users"
-            )
-
         # It would make more sense to use forwarded_uri here, since this is
         # the original URI sent by the client for proxied requests, however
         # it does not included the original port. Perhaps this is a bug in
@@ -80,6 +87,18 @@ class User(object):
         # digit nor whitespace. Thus, if we are given an integer, it must be
         # a user ID, and a username otherwise.
         try:
-            print("You requsted id " + str(int(username_or_id)))
-        except ValueError:
-            print("You requested username " + username_or_id)
+            if (username_or_id.isdigit()):
+                print("Getting user by id")
+                user = UserModel[username_or_id]
+            else:
+                print("Getting user by username")
+                user = UserModel.get(UserModel.username == username_or_id)
+            print("Found user " + user.username)
+        except DoesNotExist:
+            raise falcon.HTTPNotFound(
+                title="User Not Found",
+                description="The requested user could not be found.",
+                # 404 status codes are cacheable by default; but new users can be
+                # created at any time
+                headers={"Cache-Control": "no-cache"}
+            )
