@@ -6,24 +6,7 @@ from peewee import *
 from mylibrary.model.user import UserModel, DoesNotExist
 
 from mylibrary.routes import routes
-
-create_user_schema = {
-    "type": "object",
-    "properties": {
-        "username": {
-            "description": "Desired username",
-            "type": "string",
-            "minLength": 1,
-            "pattern": "^[^\\d\\s]"
-        },
-        "password": {
-            "description": "Your chosen password",
-            "type": "string",
-            "minLength": 6,
-        }
-    },
-    "required": ["username", "password"]
-}
+import mylibrary.schemas as schemas
 
 class AllowedUsers(object):
     def __init__(self, permitted_users):
@@ -40,7 +23,6 @@ class AllowedUsers(object):
                 "You do not have the permissions necessary to perform the requested operation."
             )
 
-
 class Users(object):
     # Disable authentication on the POST method to allow anyone to create a
     # new user account. (Alternatively, we could require that the admin user
@@ -55,19 +37,12 @@ class Users(object):
         # the original URI sent by the client for proxied requests, however
         # it does not included the original port. Perhaps this is a bug in
         # falcon?
-        body = {
+        resp.media = {
             "href": req.uri,
-            "items": []
+            "items": [user.as_dict(req) for user in UserModel.select()]
         }
 
-        for user in UserModel.select():
-            body['items'].append({"username" : user.username,
-            "join_date": str(user.join_date),
-            "href": req.prefix + routes['user'].format(username_or_id=str(user.id))})
-
-        resp.media = body
-
-    @jsonschema.validate(create_user_schema)
+    @jsonschema.validate(schemas.create_user_schema)
     def on_post(self, req, resp):
         doc = req.media
         user = UserModel(
@@ -110,4 +85,7 @@ class User(object):
                 description="The requested user does not exist."
             )
 
-        print("Found user " + requested_user.username)
+        resp.media = {
+            "href": req.uri,
+            "items": [requested_user.as_dict(req)]
+        }

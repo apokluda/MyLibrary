@@ -2,7 +2,7 @@ import datetime
 
 from peewee import *
 
-import mylibrary
+from mylibrary.routes import routes
 from .base import BaseModel
 
 # NOTE: This is just an exercise. In a real implementation we would
@@ -16,3 +16,9 @@ class UserModel(BaseModel):
     username = CharField(unique=True)
     password = CharField()
     join_date = DateTimeField(default=datetime.datetime.utcnow)
+
+    def as_dict(self, req):
+        return {"username" : self.username,
+            "join_date": str(self.join_date),
+            "href": req.prefix + routes['user'].format(username_or_id=str(self.id))
+        }
