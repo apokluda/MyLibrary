@@ -4,6 +4,10 @@ from peewee import DoesNotExist
 def authenticate(username, password):
     try:
         user = UserModel.get(UserModel.username == username)
-        return {"username": username} if user.password == password else None
+        if user.password == password:
+            return {'username': username,
+            'id': user.id,
+            'is_admin': username == 'admin'}
     except DoesNotExist:
-        return None
+        pass
+    return None

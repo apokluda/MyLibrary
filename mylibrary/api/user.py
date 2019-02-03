@@ -26,12 +26,15 @@ create_user_schema = {
 }
 
 class AllowedUsers(object):
-    def __init__(self, users):
-        self._users = users
+    def __init__(self, permitted_users):
+        self._permitted_users = permitted_users
 
     def __call__(self, req, resp, resource, params):
-        user = req.context['user']
-        if user['username'] not in self._users:
+        auth_user = req.context['user']
+        # Admin is allowed to perform all operations
+        if auth_user['is_admin']:
+            return
+        if auth_user['username'] not in self._permitted_users:
             raise falcon.HTTPUnauthorized(
                 "Operation Not Permitted",
                 "You do not have the permissions necessary to perform the requested operation."
@@ -46,7 +49,7 @@ class Users(object):
         "exempt_methods": ["POST"]
     }
 
-    @falcon.before(AllowedUsers(['admin']))
+    @falcon.before(AllowedUsers([]))
     def on_get(self, req, resp):
         # It would make more sense to use forwarded_uri here, since this is
         # the original URI sent by the client for proxied requests, however
@@ -82,23 +85,29 @@ class Users(object):
             )
 
 class User(object):
+    def __not_permitted(self):
+        return falcon.HTTPUnauthorized(
+            "Operation Not Permitted",
+            "Non-admin users may request details only for their own profile."
+        )
+
     def on_get(self, req, resp, username_or_id):
         # We use input validation to ensure that usernames do not start with a
         # digit nor whitespace. Thus, if we are given an integer, it must be
         # a user ID, and a username otherwise.
+        auth_user = req.context['user']
         try:
-            if (username_or_id.isdigit()):
-                print("Getting user by id")
-                user = UserModel[username_or_id]
-            else:
-                print("Getting user by username")
-                user = UserModel.get(UserModel.username == username_or_id)
-            print("Found user " + user.username)
+            try:
+                if (not auth_user['is_admin'] and auth_user['id'] != int(username_or_id)):
+                    raise self.__not_permitted()
+                requested_user = UserModel[username_or_id]
+            except ValueError:
+                if (not auth_user['is_admin'] and auth_user['username'] != username_or_id):
+                    raise self.__not_permitted()
+                requested_user = UserModel.get(UserModel.username == username_or_id)
         except DoesNotExist:
             raise falcon.HTTPNotFound(
-                title="User Not Found",
-                description="The requested user could not be found.",
-                # 404 status codes are cacheable by default; but new users can be
-                # created at any time
-                headers={"Cache-Control": "no-cache"}
+                description="The requested user does not exist."
             )
+
+        print("Found user " + requested_user.username)
