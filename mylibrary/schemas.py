@@ -21,7 +21,7 @@ date_time = {
     "format": "date-time"
 }
 
-create_user_schema = {
+create_user = {
     "type": "object",
     "properties": {
         "username": username,
@@ -30,7 +30,7 @@ create_user_schema = {
     "required": ["username", "password"]
 }
 
-get_user_schema = {
+get_user = {
     "type": "object",
     "properties" : {
         "href": link,
@@ -51,10 +51,33 @@ get_user_schema = {
     "required": ["href", "items"]
 }
 
-create_book_schema = {
+create_book = {
     "type": "object",
     "properties": {
         "title": {"type": "string"},
         "author": {"type": "string"}
+    },
+    "required": ["title", "author"]
+}
+
+book = {
+    "type": "object",
+    "properties": {
+        "author": {"type": "string"},
+        "date_added": date_time,
+        "href": link,
+        "owner": link,
+        "title": {"type": "string"}
+    }
+}
+
+get_book = {
+    "type": "object",
+    "properties": {
+        "href": link,
+        "items": {
+            "type": "array",
+            "items": book
+        }
     }
 }

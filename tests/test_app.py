@@ -31,7 +31,7 @@ def test_admin_user_created_by_default(client):
     response = client.simulate_get(routes['users'], **as_admin)
     assert response.status == falcon.HTTP_OK
     body = json.loads(response.content, encoding='utf-8')
-    validate(body, schemas.get_user_schema)
+    validate(body, schemas.get_user)
     # There should be only 1 user in the system, and that user is 'admin'
     assert len(body['items']) == 1
     assert body['items'][0]['username'] == "admin"
@@ -87,7 +87,7 @@ def test_retrieve_profile_by_username(client):
     response = client.simulate_get(routes['user'].format(username_or_id="bob"), **as_bob)
     assert response.status == falcon.HTTP_OK
     body = json.loads(response.content, encoding='utf-8')
-    validate(body, schemas.get_user_schema)
+    validate(body, schemas.get_user)
     assert len(body['items']) == 1
     assert body['items'][0]['username'] == "bob"
 
@@ -99,7 +99,7 @@ def test_retrieve_profile_by_id(client):
     response = client.simulate_get(routes['user'].format(username_or_id=2), **as_bob)
     assert response.status == falcon.HTTP_OK
     body = json.loads(response.content, encoding='utf-8')
-    validate(body, schemas.get_user_schema)
+    validate(body, schemas.get_user)
     assert len(body['items']) == 1
     assert body['items'][0]['username'] == "bob"
 
@@ -121,8 +121,15 @@ def test_individual_user_profile_lists_books(client):
     assert response.status == falcon.HTTP_OK
     body = json.loads(response.content, encoding='utf-8')
     # FRAGILE! See the commend about user id values above.
-    assert body['items'][0]['books'][0] == "http://falconframework.org/v1/book/1"
+    assert body['items'][0]['books'][0] == "http://falconframework.org/v1/books/1"
 
 def test_must_authenticate_to_list_books(client):
     response = client.simulate_get(routes['books'])
     assert response.status == falcon.HTTP_UNAUTHORIZED
+
+@pytest.mark.dependency(depends=["test_add_book"])
+def test_list_individual_book(client):
+    response = client.simulate_get(routes['book'].format(id=1), **as_bob)
+    assert response.status == falcon.HTTP_OK
+    body = json.loads(response.content, encoding='utf-8')
+    validate(body, schemas.get_book)

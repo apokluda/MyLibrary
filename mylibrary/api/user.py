@@ -26,7 +26,7 @@ class Users(object):
             "items": [user.as_dict(req) for user in UserModel.select()]
         }
 
-    @jsonschema.validate(schemas.create_user_schema)
+    @jsonschema.validate(schemas.create_user)
     def on_post(self, req, resp):
         doc = req.media
         user = UserModel(
