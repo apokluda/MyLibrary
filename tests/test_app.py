@@ -36,7 +36,7 @@ def test_admin_user_created_by_default(client):
     assert len(body['items']) == 1
     assert body['items'][0]['username'] == "admin"
 
-def test_new_user_gets_created(client):
+def test_create_user(client):
     response = create_user(client)
     assert response.status == falcon.HTTP_CREATED
     assert response.headers['location'] == routes['user'].format(username_or_id="bob")
@@ -73,22 +73,17 @@ def test_password_must_not_be_too_short(client):
     # by jsonschema and could change in future releases
     assert body['description'] == "'12345' is too short"
 
-@pytest.mark.dependency(depends=["test_new_user_gets_created"])
+@pytest.mark.dependency(depends=["test_create_user"])
 def test_user_cannot_be_created_twice(client):
     response = create_user(client)
     assert response.status == falcon.HTTP_BAD_REQUEST
-
-@pytest.mark.dependency(depends=["test_new_user_gets_created"])
-def test_unpriviledged_user_cannot_list_all_users(client):
-    response = client.simulate_get(routes['users'], **as_bob)
-    assert response.status == falcon.HTTP_UNAUTHORIZED
 
 def test_unauthenticated_user_cannot_list_all_users(client):
     response = client.simulate_get(routes['users'])
     assert response.status == falcon.HTTP_UNAUTHORIZED
 
-@pytest.mark.dependency(depends=["test_new_user_gets_created"])
-def test_user_can_retrieve_own_profile_by_username(client):
+@pytest.mark.dependency(depends=["test_create_user"])
+def test_retrieve_profile_by_username(client):
     response = client.simulate_get(routes['user'].format(username_or_id="bob"), **as_bob)
     assert response.status == falcon.HTTP_OK
     body = json.loads(response.content, encoding='utf-8')
@@ -96,8 +91,8 @@ def test_user_can_retrieve_own_profile_by_username(client):
     assert len(body['items']) == 1
     assert body['items'][0]['username'] == "bob"
 
-@pytest.mark.dependency(depends=["test_new_user_gets_created"])
-def test_user_can_retrieve_own_profile_by_id(client):
+@pytest.mark.dependency(depends=["test_create_user"])
+def test_retrieve_profile_by_id(client):
     # FRAGILE! This test assumes that there are only two users in the system,
     # 'admin' and 'bob' with id's 1 and 2. These id values are automatically
     # assigned by peewee and could be different it future releases (although unlikely).
@@ -108,21 +103,26 @@ def test_user_can_retrieve_own_profile_by_id(client):
     assert len(body['items']) == 1
     assert body['items'][0]['username'] == "bob"
 
-@pytest.mark.dependency(depends=["test_new_user_gets_created"])
-def test_admin_can_retrieve_individual_user_by_username(client):
-    response = client.simulate_get(routes['user'].format(username_or_id="bob"), **as_admin)
-    assert response.status == falcon.HTTP_OK
-    body = json.loads(response.content, encoding='utf-8')
-    validate(body, schemas.get_user_schema)
-    assert len(body['items']) == 1
-    assert body['items'][0]['username'] == "bob"
+a_book = {
+    "title": "On Liberty",
+    "author": "John Stuart Mill"
+}
 
-@pytest.mark.dependency(depends=["test_new_user_gets_created"])
-def test_admin_can_retrieve_individual_profile_by_id(client):
-    # FRAGILE! See comment above.
-    response = client.simulate_get(routes['user'].format(username_or_id=2), **as_admin)
+@pytest.mark.dependency(depends=["test_create_user"])
+def test_add_book(client):
+    response = client.simulate_post(routes['books'], body=json.dumps(a_book), **as_bob)
+    assert response.status == falcon.HTTP_CREATED
+    # FRAGILE! See the commend about user id values above.
+    assert response.headers['location'] == routes['book'].format(id=1)
+
+@pytest.mark.dependency(depends=["test_add_book"])
+def test_individual_user_profile_lists_books(client):
+    response = client.simulate_get(routes['user'].format(username_or_id="bob"), **as_bob)
     assert response.status == falcon.HTTP_OK
     body = json.loads(response.content, encoding='utf-8')
-    validate(body, schemas.get_user_schema)
-    assert len(body['items']) == 1
-    assert body['items'][0]['username'] == "bob"
+    # FRAGILE! See the commend about user id values above.
+    assert body['items'][0]['books'][0] == "http://falconframework.org/v1/book/1"
+
+def test_must_authenticate_to_list_books(client):
+    response = client.simulate_get(routes['books'])
+    assert response.status == falcon.HTTP_UNAUTHORIZED

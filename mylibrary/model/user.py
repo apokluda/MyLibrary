@@ -8,9 +8,7 @@ from .base import BaseModel
 def is_admin(user):
     return user.username == "admin"
 
-# NOTE: This is just an exercise. In a real implementation we would
-# never store a plain text password! Peewee has a nice example demonstrating
-# password hashing: http://docs.peewee-orm.com/en/latest/peewee/hacks.html#writing-custom-functions-with-sqlite
+# NOTE: This is just an exercise. In a real implementation we would never store a plain text password!
 
 class UserModel(BaseModel):
     class Meta:
@@ -20,8 +18,11 @@ class UserModel(BaseModel):
     password = CharField()
     join_date = DateTimeField(default=datetime.datetime.utcnow)
 
-    def as_dict(self, req):
-        return {"username" : self.username,
+    def as_dict(self, req, include_books=False):
+        dict = {"username" : self.username,
             "join_date": str(self.join_date),
             "href": req.prefix + routes['user'].format(username_or_id=str(self.id))
         }
+        if include_books:
+            dict["books"] = [req.prefix + routes['book'].format(id=str(book.id)) for book in self.books]
+        return dict

@@ -42,10 +42,19 @@ get_user_schema = {
                     "username": username,
                     "join_date": date_time,
                     "href": link,
+                    "books": { "type": "array", "items": link}
                 }
             },
             "required": ["username", "join_date", "href"]
         },
     },
     "required": ["href", "items"]
+}
+
+create_book_schema = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "author": {"type": "string"}
+    }
 }

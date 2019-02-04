@@ -1,6 +1,7 @@
 import falcon
 from falcon_auth import FalconAuthMiddleware, BasicAuthBackend
 import mylibrary.api.user
+import mylibrary.api.book
 import mylibrary.model.auth
 from .routes import routes
 
@@ -20,3 +21,4 @@ application = falcon.API(middleware=[auth_middleware])
 
 application.add_route(routes['users'], mylibrary.api.user.Users())
 application.add_route(routes['user'], mylibrary.api.user.User())
+application.add_route(routes['books'], mylibrary.api.book.Books())
