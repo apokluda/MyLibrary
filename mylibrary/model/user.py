@@ -8,7 +8,8 @@ from .base import BaseModel
 def is_admin(user):
     return user.username == "admin"
 
-# NOTE: This is just an exercise. In a real implementation we would never store a plain text password!
+# NOTE: This is just an exercise. In a real implementation we would never store
+#       a plain text password!
 
 class UserModel(BaseModel):
     class Meta:

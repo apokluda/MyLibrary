@@ -22,6 +22,8 @@ def create_user(client, username="bob", password="icecream"):
 as_admin = {"headers":{"Authorization":"Basic YWRtaW46cGFzc3cwcmQ="}}
 # password is "icecream"
 as_bob = {"headers":{"Authorization": "Basic Ym9iOmljZWNyZWFt"}}
+# password is "mudcake"
+as_mary = {"headers":{"Authorization": "Basic bWFyeTptdWRjYWtl"}}
 
 @pytest.fixture
 def client():
@@ -173,3 +175,17 @@ bad_user_loan = {
 def test_cant_loan_book_to_user_that_does_not_exist(client):
     response = client.simulate_post(routes['loans'], body=json.dumps(bad_user_loan), **as_bob)
     assert response.status == falcon.HTTP_NOT_FOUND
+
+loan_to_mary = {
+    "book_id": 1,            # This book is owned by Bob
+    "user_id": 2,
+    "date_due": "2019-03-31"
+}
+
+@pytest.mark.dependency(depends=["test_add_book"])
+def test_cannot_loan_book_you_do_not_own(client):
+    response = create_user(client, "mary", "mudcake")
+    assert response.status == falcon.HTTP_CREATED
+    # Mary should not be allowed to loan Bob's book to herself
+    response = client.simulate_post(routes['loans'], body=json.dumps(loan_to_mary), **as_mary)
+    assert response.status == falcon.HTTP_UNAUTHORIZED

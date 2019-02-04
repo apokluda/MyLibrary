@@ -34,9 +34,6 @@ class Book(object):
         )
 
     def on_get(self, req, resp, id):
-        # We use input validation to ensure that usernames do not start with a
-        # digit nor whitespace. Thus, if we are given an integer, it must be
-        # a user ID, and a username otherwise.
         auth_user = req.context['user']
         try:
             try:
