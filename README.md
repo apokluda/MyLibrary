@@ -75,6 +75,8 @@ in the database making it easier to maintain.
 
 ## Setup
 
+**NOTE: The instructions below were tested on Ubuntu 18.10.**
+
 You should have received the source in an archive containing a virtualenv
 directory called `.venv`. Open a terminal and `cd` to the directory where
 you extracted the archive. Then you can run the service using `gunicorn` from the
@@ -104,6 +106,14 @@ If everything is working correctly, you should see the output similar to the fol
         "description": "Missing Authorization Header",
         "title": "401 Unauthorized"
     }
+
+If you run the unit tests, you should see that all the tests pass. The command
+
+    $ pytest tests
+
+should output something similar to:
+
+    ==== 19 passed in 0.26 seconds ====
 
 If that didn't work, you can try to recreate your virtualenv directory using
 the provided setup script:
