@@ -108,7 +108,7 @@ If everything is working correctly, you should see the output similar to the fol
 If that didn't work, you can try to recreate your virtualenv directory using
 the provided setup script:
 
-    $ ./setup.sh
+    $ bash setup.sh
 
 ## Usage
 
