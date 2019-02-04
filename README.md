@@ -76,18 +76,18 @@ in the database making it easier to maintain.
 ## Setup
 
 You should have received the source in an archive containing a virtualenv
-directory called `venv`. Open a terminal and `cd` to the directory where
+directory called `.venv`. Open a terminal and `cd` to the directory where
 you extracted the archive. Then you can run the service using `gunicorn` from the
 virtualenv:
 
-    $ source venv/bin/activate
+    $ source .venv/bin/activate
     $ gunicorn mylibrary.app
 
 Now open a second terminal in order and activate the virtualenv again. You can
 interact with the service using `httpie` from the virtualenv. To test that your
 setup is working, try to get a list of all books:
 
-    $ source venv/bin/activate
+    $ source .venv/bin/activate
     $ http localhost:8000/v1/books
 
 If everything is working correctly, you should see the output similar to the following:
@@ -264,7 +264,7 @@ this in the unit tests. Take a look at `tests/test_app.py`.
 
 There's lots that could be done with this simple service! Some of the next
 things to implement would be checks so that users can't create a book for a
-book that is already lent out, and the ability to check a book back in by
+book that is already on loan, and the ability to check a book back in by
 issuing a `PATCH` request to the loans endpoint with a returned date.
 
 There are lots of opportunities for making it easier for the users to query
