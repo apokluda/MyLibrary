@@ -5,6 +5,9 @@ from peewee import *
 from mylibrary.routes import routes
 from .base import BaseModel
 
+def is_admin(user):
+    return user.username == "admin"
+
 # NOTE: This is just an exercise. In a real implementation we would
 # never store a plain text password! Peewee has a nice example demonstrating
 # password hashing: http://docs.peewee-orm.com/en/latest/peewee/hacks.html#writing-custom-functions-with-sqlite

@@ -3,7 +3,7 @@ from falcon.media.validators import jsonschema
 
 from peewee import *
 
-from mylibrary.model.user import UserModel, DoesNotExist
+from mylibrary.model.user import UserModel, is_admin, DoesNotExist
 
 from mylibrary.routes import routes
 import mylibrary.schemas as schemas
@@ -15,9 +15,9 @@ class AllowedUsers(object):
     def __call__(self, req, resp, resource, params):
         auth_user = req.context['user']
         # Admin is allowed to perform all operations
-        if auth_user['is_admin']:
+        if is_admin(auth_user):
             return
-        if auth_user['username'] not in self._permitted_users:
+        if auth_user.username not in self._permitted_users:
             raise falcon.HTTPUnauthorized(
                 "Operation Not Permitted",
                 "You do not have the permissions necessary to perform the requested operation."
@@ -73,11 +73,11 @@ class User(object):
         auth_user = req.context['user']
         try:
             try:
-                if (not auth_user['is_admin'] and auth_user['id'] != int(username_or_id)):
+                if (not is_admin(auth_user) and auth_user.id != int(username_or_id)):
                     raise self.__not_permitted()
                 requested_user = UserModel[username_or_id]
             except ValueError:
-                if (not auth_user['is_admin'] and auth_user['username'] != username_or_id):
+                if (not is_admin(auth_user) and auth_user.username != username_or_id):
                     raise self.__not_permitted()
                 requested_user = UserModel.get(UserModel.username == username_or_id)
         except DoesNotExist:
