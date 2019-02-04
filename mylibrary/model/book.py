@@ -16,7 +16,8 @@ class BookModel(BaseModel):
     owner = ForeignKeyField(UserModel, backref='books')
 
     def as_dict(self, req):
-        return {"title" : self.title,
+        return {"id": self.id,
+            "title" : self.title,
             "author": self.author,
             "date_added": str(self.date_added),
             "owner": req.prefix + routes['user'].format(username_or_id=str(self.owner.id)),

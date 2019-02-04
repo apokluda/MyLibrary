@@ -19,7 +19,8 @@ class UserModel(BaseModel):
     join_date = DateTimeField(default=datetime.datetime.utcnow)
 
     def as_dict(self, req, include_books=False):
-        dict = {"username" : self.username,
+        dict = {"id": self.id,
+            "username" : self.username,
             "join_date": str(self.join_date),
             "href": req.prefix + routes['user'].format(username_or_id=str(self.id))
         }
