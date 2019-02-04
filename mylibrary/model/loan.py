@@ -8,6 +8,9 @@ from .base import BaseModel
 from .book import BookModel
 from .user import UserModel
 
+def none_or_str(obj):
+    return None if obj is None else str(obj)
+
 class LoanModel(BaseModel):
     class Meta:
         table_name = "loan"
@@ -25,5 +28,5 @@ class LoanModel(BaseModel):
             "borrower": req.prefix + routes['user'].format(username_or_id=str(self.borrower.id)),
             "date_borrowed": str(self.date_borrowed),
             "date_due": str(self.date_due),
-            "date_returned": str(self.date_returned)
+            "date_returned": none_or_str(self.date_returned)
         }

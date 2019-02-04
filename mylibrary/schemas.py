@@ -98,3 +98,28 @@ create_loan = {
     },
     "required": ["book_id", "user_id", "date_due"]
 }
+
+loan = {
+    "type": "object",
+    "properties": {
+        "book": link,
+        "borrower": link,
+        "date_borrowed": date_time,
+        "date_due": date_time,
+        "date_returned": {"anyOf": [date_time, {"type": "null"}]},
+        "owner": link
+    },
+    "required": ["book", "borrower", "date_borrowed", "date_due", "date_returned", "owner"]
+}
+
+get_loan = {
+    "type": "object",
+    "properties": {
+        "href": link,
+        "items": {
+            "type": "array",
+            "items": loan
+        }
+    },
+    "required": ["href", "items"]
+}

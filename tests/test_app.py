@@ -133,3 +133,43 @@ def test_list_individual_book(client):
     assert response.status == falcon.HTTP_OK
     body = json.loads(response.content, encoding='utf-8')
     validate(body, schemas.get_book)
+
+a_loan = {
+    "book_id": 1,            # Loan Bob's copy of "On Liberty"
+    "user_id": 1,            # to "admin"
+    "date_due": "2019-02-14" # until Valentine's day
+}
+
+@pytest.mark.dependency(depends=["test_add_book"])
+def test_add_loan(client):
+    response = client.simulate_post(routes['loans'], body=json.dumps(a_loan), **as_bob)
+    assert response.status == falcon.HTTP_CREATED
+
+@pytest.mark.dependency(depends=["test_add_loan"])
+def test_admin_can_list_all_loans(client):
+    response = client.simulate_get(routes['loans'], **as_admin)
+    assert response.status == falcon.HTTP_OK
+    body = json.loads(response.content, encoding='utf-8')
+    validate(body, schemas.get_loan)
+
+bad_book_loan = {
+    "book_id": 2,            # This book doesn't exist
+    "user_id": 1,
+    "date_due": "2019-03-01"
+}
+
+@pytest.mark.dependency(depends=["test_add_book"])
+def test_cant_loan_book_that_does_not_exist(client):
+    response = client.simulate_post(routes['loans'], body=json.dumps(bad_book_loan), **as_bob)
+    assert response.status == falcon.HTTP_NOT_FOUND
+
+bad_user_loan = {
+    "book_id": 1,
+    "user_id": 3,            # This user doesn't exist
+    "date_due": "2019-03-01"
+}
+
+@pytest.mark.dependency(depends=["test_add_book"])
+def test_cant_loan_book_to_user_that_does_not_exist(client):
+    response = client.simulate_post(routes['loans'], body=json.dumps(bad_user_loan), **as_bob)
+    assert response.status == falcon.HTTP_NOT_FOUND

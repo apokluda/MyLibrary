@@ -32,7 +32,7 @@ class Loans(object):
         try:
             book = BookModel.get(BookModel.id == int(doc.get('book_id')))
         except mylibrary.model.book.DoesNotExist:
-            raise falcon.HTTPNotFonud(
+            raise falcon.HTTPNotFound(
                 description="The requested book does not exist."
             )
 
@@ -46,7 +46,7 @@ class Loans(object):
         try:
             borrower = UserModel.get(UserModel.id == int(doc.get('user_id')))
         except mylibrary.model.user.DoesNotExist:
-            raise falcon.HTTPNotFonud(
+            raise falcon.HTTPNotFound(
                 description="The requested borrower does not exist."
             )
 
@@ -59,4 +59,3 @@ class Loans(object):
 
         loan.save()
         resp.status = falcon.HTTP_CREATED
-        resp.location = routes['loan'].format(id=loan.id)
